@@ -1,0 +1,91 @@
+#include <SoftwareSerial.h>
+
+// Define the pins
+#define MQ2_SENSOR_PIN A0 // Analog pin for MQ-2 sensor
+#define BUZZER_PIN 9      // Digital pin for buzzer
+
+// Define the threshold value for smoke detection
+#define SMOKE_THRESHOLD 300
+
+// Initialize SoftwareSerial for GSM module
+SoftwareSerial gsmSerial(7, 8); // RX, TX
+
+// Phone number to call
+const char phone_number[] = "9346851442"; // Replace with your phone number
+
+void setup() {
+  // Begin serial communication
+  Serial.begin(9600);
+  gsmSerial.begin(9600);
+
+  // Set buzzer pin as output
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // Initialize GSM module
+  initGSM();
+
+  // Print initialization message
+  Serial.println("Fire Alarm System Initialized");
+}
+
+void loop() {
+  // Read analog value from MQ-2 sensor
+  int sensorValue = analogRead(MQ2_SENSOR_PIN);
+
+  // Print the sensor value for debugging
+  Serial.print("Sensor Value: ");
+  Serial.println(sensorValue);
+
+  // Check if the sensor value exceeds the threshold
+  if (sensorValue > SMOKE_THRESHOLD) {
+    // Trigger the buzzer
+    digitalWrite(BUZZER_PIN, HIGH);
+
+    // Print fire detected message
+    Serial.println("Fire on your home!! Fire on your kitchen!!");
+
+    // Make a phone call
+    makePhoneCall();
+
+    // Wait for a few seconds to avoid multiple calls
+    delay(30000); // 30 seconds
+  } else {
+    // Turn off the buzzer
+    digitalWrite(BUZZER_PIN, LOW);
+
+    // Print no fire detected message
+    Serial.println("No flame");
+  }
+
+  // Delay between sensor readings
+  delay(1000); // 1 second
+}
+
+void initGSM() {
+  // Print initialization message
+  Serial.println("Initializing GSM Module...");
+
+  // Send AT command to check communication
+  gsmSerial.println("AT");
+  delay(1000);
+
+  // Print initialization complete message
+  Serial.println("GSM Module Initialized");
+}
+
+void makePhoneCall() {
+  // Print making call message
+  Serial.println("Making a call...");
+
+  // Send the AT command to dial a phone number
+  gsmSerial.println("ATD" + String(phone_number) + ";");
+
+  // Wait for a few seconds for the call to connect
+  delay(10000); // 10 seconds
+
+  // End the call
+  gsmSerial.println("ATH");
+
+  // Print call ended message
+  Serial.println("Call ended");
+}
